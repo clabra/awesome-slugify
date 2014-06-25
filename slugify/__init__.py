@@ -10,7 +10,7 @@ slugify_url = Slugify()
 slugify_url.to_lower = True
 #slugify_url.stop_words = ('a', 'an', 'the')
 slugify_url.max_length = 100
-slugify_url.min_length = 35
+slugify_url.min_length = 25
 slugify_url.separator = '-'
 slugify_url.extract_phrase = True
 

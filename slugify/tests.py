@@ -255,6 +255,16 @@ class DeprecationTestCase(unittest.TestCase):
 
 
 class PhraseSlugifyTestCase(unittest.TestCase):
+    """Tests results for current config of slugify_url
+
+    slugify_url = Slugify()
+    slugify_url.to_lower = True
+    #slugify_url.stop_words = ('a', 'an', 'the')
+    slugify_url.max_length = 100
+    slugify_url.min_length = 25
+    slugify_url.separator = '-'
+    slugify_url.extract_phrase = True
+    """
 
     def test_slugify_phrase_url(self):
         text = "Someone must have slandered Josef K., for one morning, without having done anything truly wrong, he was arrested."
@@ -269,6 +279,23 @@ class PhraseSlugifyTestCase(unittest.TestCase):
         self.assertEqual(slugify_url(text),
                 "i-wish-either-my-father-or-my-mother-or-indeed-both-of-them")
 
+        text = "En un lugar de la Mancha, de cuyo nombre no quiero acordarme, vivía un caballero."
+        self.assertEqual(slugify_url(text),
+                "en-un-lugar-de-la-mancha-de-cuyo-nombre-no-quiero-acordarme-vivia-un-caballero")
+
+        # :
+        text = "Este era el nombre del caballero: Don Quijote"
+        self.assertEqual(slugify_url(text),
+                "este-era-el-nombre-del-caballero") # len (phrase) > min_length, cut at punctuation mark
+
+        text = "Su nombre: Don Quijote"
+        self.assertEqual(slugify_url(text),
+                "su-nombre-don-quijote") # len (phrase) < min_length, don't cut at punctuation mark
+
+        # ;
+        text = "Este era el nombre del caballero; Don Quijote"
+        self.assertEqual(slugify_url(text),
+                "este-era-el-nombre-del-caballero") # len (phrase) > min_length, cut at punctuation mark
 
 if __name__ == '__main__':
     unittest.main()

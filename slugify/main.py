@@ -149,7 +149,7 @@ class Slugify(object):
     def phrase(self, text): 
         """Try to get an slug as most meaningful as possible using punctuation to extract fragment"""
         text =  text[:self.max_length] # Note we have to cut text here, can't wait after sanitize phase
-        punctuation_marks = [u'\.', u';', u',', u':']
+        punctuation_marks = [u'\.', u';', u',', u'\:']
         len_text = len(text)
         for mark in punctuation_marks: 
             r = re.compile(u".*%s" % (mark))
@@ -157,7 +157,7 @@ class Slugify(object):
             if m: 
                 phrase = m.group()
                 len_phrase = len(phrase)
-                if len_phrase >= self.min_length and len_phrase < len_text: 
+                if len_phrase >= self.min_length and len_phrase <= len_text:
                     text = phrase
                     break
         return text
