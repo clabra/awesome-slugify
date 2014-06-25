@@ -65,7 +65,10 @@ class Slugify(object):
     _stop_words = ()
 
     def __init__(self, pretranslate=None, translate=unidecode, safe_chars='', stop_words=(),
-                 to_lower=False, max_length=None, separator=u'-', capitalize=False):
+                 to_lower=False, max_length=2000, min_length=25, separator=u'-', capitalize=False, extract_phrase=False):
+        """Init next parametesr taking in account URL format recommendations: 
+        to_lower = True, max_length = 2000, separator = '-'
+        """
 
         self.pretranslate = pretranslate
         self.translate = translate
@@ -74,8 +77,10 @@ class Slugify(object):
 
         self.to_lower = to_lower
         self.max_length = max_length
+        self.min_length = min_length
         self.separator = separator
         self.capitalize = capitalize
+        self.extract_phrase = extract_phrase
 
     def pretranslate_dict_to_function(self, convert_dict):
 
@@ -141,6 +146,23 @@ class Slugify(object):
             text = text.replace("'", '').strip()  # remove '
         return filter(None, self.sanitize_re.split(text))  # split by unwanted characters
 
+    def phrase(self, text): 
+        """Try to get an slug as most meaningful as possible using punctuation to extract fragment"""
+        text =  text[:self.max_length] # Note we have to cut text here, can't wait after sanitize phase
+        punctuation_marks = [u'\.', u';', u',', u':']
+        len_text = len(text)
+        for mark in punctuation_marks: 
+            r = re.compile(u".*%s" % (mark))
+            m = r.match(text)
+            if m: 
+                phrase = m.group()
+                len_phrase = len(phrase)
+                if len_phrase >= self.min_length and len_phrase < len_text: 
+                    text = phrase
+                    break
+        return text
+
+
     def __call__(self, text, **kwargs):
 
         max_length = kwargs.get('max_length', self.max_length)
@@ -166,6 +188,8 @@ class Slugify(object):
 
             text = u''.join(text_parts)
 
+        if self.extract_phrase == True:
+            text = self.phrase(text)
         words = self.sanitize(text)
         text = join_words(words, separator, max_length)
 
