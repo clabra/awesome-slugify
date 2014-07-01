@@ -269,11 +269,11 @@ class PhraseSlugifyTestCase(unittest.TestCase):
     def test_slugify_phrase_url(self):
         text = "Someone must have slandered Josef K., for one morning, without having done anything truly wrong, he was arrested."
         self.assertEqual(slugify_url(text),
-                "someone-must-have-slandered-josef-k")
+                "someone-must-have-slandered-josef-k-for-one-morning-without-having-done-anything-truly-wrong")
 
         text = "The Miss Lonelyhearts of the New York Post-Dispatch (Are you in trouble?—Do-you-need-advice?—Write-to-Miss-Lonelyhearts-and-she-will-help-you) sat at his desk and stared at a piece of white cardboard. —Nathanael West, Miss Lonelyhearts"
         self.assertEqual(slugify_url(text),
-                "the-miss-lonelyhearts-of-the-new-york-post-dispatch-are-you-in-trouble-do-you-need-advice-write")
+                "the-miss-lonelyhearts-of-the-new-york-post-dispatch-are-you-in")
 
         text = " I wish either my father or my mother, or indeed both of them, as they were in duty both equally bound to it, had minded what they were about when they begot me; had they duly considered how much depended upon what they were then doing;—that not only the production of a rational Being was concerned in it, but that possibly the happy formation and temperature of his body, perhaps his genius and the very cast of his mind;—and, for aught they knew to the contrary, even the fortunes of his whole house might take their turn from the humours and dispositions which were then uppermost:—Had they duly weighed and considered all this, and proceeded accordingly,—I am verily persuaded I should have made a quite different figure in the world, from that, in which the reader is likely to see me. —Laurence Sterne, Tristram Shandy (1759–1767)"
         self.assertEqual(slugify_url(text),

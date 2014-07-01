@@ -4,6 +4,7 @@ import sys
 
 from unidecode import unidecode
 import regex as re
+from django.utils.text import Truncator
 
 
 re.DEFAULT_VERSION = re.V1  # Version 1 behaviour: nested sets and set operations are supported
@@ -65,7 +66,7 @@ class Slugify(object):
     _stop_words = ()
 
     def __init__(self, pretranslate=None, translate=unidecode, safe_chars='', stop_words=(),
-                 to_lower=False, max_length=2000, min_length=25, separator=u'-', capitalize=False, extract_phrase=False):
+                 to_lower=False, max_length=2000, min_length=25, separator=u'-', capitalize=False, extract_phrase=False, truncate_words=False):
         """Init next parametesr taking in account URL format recommendations: 
         to_lower = True, max_length = 2000, separator = '-'
         """
@@ -81,6 +82,7 @@ class Slugify(object):
         self.separator = separator
         self.capitalize = capitalize
         self.extract_phrase = extract_phrase
+        self.truncate_words = truncate_words # Is allowed cut words in the middle?
 
     def pretranslate_dict_to_function(self, convert_dict):
 
@@ -146,9 +148,24 @@ class Slugify(object):
             text = text.replace("'", '').strip()  # remove '
         return filter(None, self.sanitize_re.split(text))  # split by unwanted characters
 
+    def avoid_truncated_word(self, text): 
+        """Truncate in a way that text will be shorter than max_length and won't be cut in the middle of a word""" 
+        words = text.split()
+        if not words:
+            return text
+        truncator = Truncator(text)
+        last_word = text.split()[-1]
+        text = truncator.chars(self.max_length, '')
+        truncated_last_word = text.split()[-1]
+        if truncated_last_word !=  last_word: 
+            # last word is cut. So, remove it
+            num_words = len(text.split())
+            text = truncator.words(num_words - 1) 
+        return text
+
     def phrase(self, text): 
         """Try to get an slug as most meaningful as possible using punctuation to extract fragment"""
-        text =  text[:self.max_length] # Note we have to cut text here, can't wait after sanitize phase
+        text =  self.avoid_truncated_word(text)  # Note we have to cut text here, can't wait after sanitize phase
         punctuation_marks = [u'\.', u';', u',', u'\:']
         len_text = len(text)
         for mark in punctuation_marks: 
@@ -164,6 +181,12 @@ class Slugify(object):
 
 
     def __call__(self, text, **kwargs):
+        """Use: 
+        slugify_url = Slugify()
+        slugify_url.extract_phrase = True # set parameters
+        ...
+        slugify("Text to slugify")
+        """
 
         max_length = kwargs.get('max_length', self.max_length)
         separator = kwargs.get('separator', self.separator)
@@ -188,9 +211,12 @@ class Slugify(object):
 
             text = u''.join(text_parts)
 
-        if self.extract_phrase == True:
-            text = self.phrase(text)
-        words = self.sanitize(text)
+        if self.extract_phrase:
+            text = self.phrase(text) # calls self.avoid_truncated_word()
+        elif not self.truncate_words: 
+            text = self.avoid_truncated_word(text)
+
+        words = self.sanitize(text) # leave only secure chars
         text = join_words(words, separator, max_length)
 
         if text and kwargs.get('capitalize', self.capitalize):
